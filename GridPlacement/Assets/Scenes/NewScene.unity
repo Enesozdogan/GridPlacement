@@ -563,6 +563,8 @@ MonoBehaviour:
     m_Bits: 8
   cursor: {fileID: 1059902196}
   cursorOffsetY: 0
+  isUsingGrid: 0
+  isDeleting: 0
 --- !u!4 &547621675
 Transform:
   m_ObjectHideFlags: 0
@@ -593,6 +595,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   GetMousePos: {fileID: 547621674}
   tiles: {fileID: 11400000, guid: bb8666031da32a84a917e3b6e42cae4f, type: 2}
+  gridPlane: {fileID: 1030224553}
 --- !u!1 &553926080
 GameObject:
   m_ObjectHideFlags: 0
@@ -1134,7 +1137,7 @@ GameObject:
   - component: {fileID: 1030224555}
   - component: {fileID: 1030224554}
   m_Layer: 0
-  m_Name: Plane (1)
+  m_Name: GridPlane
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
