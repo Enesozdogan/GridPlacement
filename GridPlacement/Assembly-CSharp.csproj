@@ -61,8 +61,9 @@
     <Compile Include="Assets\Scripts\Object\ObjectDestroyer.cs" />
     <Compile Include="Assets\Scripts\TileSO.cs" />
     <Compile Include="Assets\Scripts\Builder.cs" />
+    <Compile Include="Assets\Scripts\Preview.cs" />
     <Compile Include="Assets\Scripts\GetMousePos.cs" />
-    <Compile Include="Assets\Scripts\Merhaba.cs" />
+    <Compile Include="Assets\Scripts\OpStateBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />

@@ -10,8 +10,12 @@ public class Builder : MonoBehaviour
     public TileSO tiles;
     private int selectedIndex;
 
+    public bool canPlace;
     [SerializeField]
     private GameObject gridPlane;
+
+    [SerializeField]
+    private Preview preview;
 
     public int[,] collisionMat = new int[10, 10];
     private void Start()
@@ -27,6 +31,7 @@ public class Builder : MonoBehaviour
 
     public void StartDeleting()
     {
+        StopPlacing();
         GetMousePos.isDeleting= true;
         GetMousePos.isUsingGrid = true;
 
@@ -47,6 +52,10 @@ public class Builder : MonoBehaviour
 
     private void DeleteObject()
     {
+        if (GetMousePos.IsOverUI())
+        {
+            return;
+        }
         if (GetMousePos.targetObject == null)
         {
             Debug.LogError("No Target Object Detected");
@@ -75,14 +84,16 @@ public class Builder : MonoBehaviour
 
     public void StartPlacing(int id)
     {
+        StopDeleting();
         GetMousePos.isUsingGrid = true;
-
+        
         selectedIndex = tiles.buildings.FindIndex(building => building.Id == id);
         if (selectedIndex == -1)
         {
             Debug.LogError("No Such Building");
             return;
         }
+        preview.StartPreview(tiles.buildings[selectedIndex].Prefab);
 
         GetMousePos.Onclick += PlaceBuilding;
         GetMousePos.OnCancel += StopPlacing;
@@ -92,7 +103,7 @@ public class Builder : MonoBehaviour
     public void StopPlacing()
     {
         GetMousePos.isUsingGrid = false;
-
+        preview.ClosePreview();
         selectedIndex = -1;
         GetMousePos.Onclick -= PlaceBuilding;
         GetMousePos.OnCancel -= StopPlacing;
@@ -109,7 +120,7 @@ public class Builder : MonoBehaviour
         int i, j;
         GetDecimalCoordinateIndex(out placePos, out i, out j);
 
-        if (!CheckCollision(i, j, tiles.buildings[selectedIndex].Size))
+        if (!canPlace)
         {
             Debug.LogError("Cannot place on this cell");
             return;
@@ -170,13 +181,28 @@ public class Builder : MonoBehaviour
 
     private void Update()
     {
-        if(GetMousePos.isUsingGrid && !gridPlane.activeSelf)
+        if (GetMousePos.isUsingGrid)
         {
-            gridPlane.SetActive(true);
-            GetMousePos.cursor.SetActive(true);
+            if (!gridPlane.activeSelf)
+            {
+                gridPlane.SetActive(true);
+                GetMousePos.cursor.SetActive(true);
+            }
+            if (!GetMousePos.isDeleting)
+            {
+                Vector3 placePos;
+                int i, j;
+
+                GetDecimalCoordinateIndex(out placePos, out i, out j);
+                canPlace = CheckCollision(i, j, tiles.buildings[selectedIndex].Size);
+                preview.UpdatePreview(canPlace);
+                Debug.LogWarning(canPlace);
+
+            }
         }
         else if(!GetMousePos.isUsingGrid && gridPlane.activeSelf)
         {
+            
             gridPlane.SetActive(false);
             GetMousePos.cursor.SetActive(false);
         }
