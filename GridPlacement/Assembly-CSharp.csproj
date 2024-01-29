@@ -62,8 +62,11 @@
     <Compile Include="Assets\Scripts\TileSO.cs" />
     <Compile Include="Assets\Scripts\Builder.cs" />
     <Compile Include="Assets\Scripts\Preview.cs" />
+    <Compile Include="Assets\Scripts\OpStateDelete.cs" />
     <Compile Include="Assets\Scripts\GetMousePos.cs" />
     <Compile Include="Assets\Scripts\OpStateBase.cs" />
+    <Compile Include="Assets\Scripts\OpStatePreview.cs" />
+    <Compile Include="Assets\Scripts\OpStateBuild.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />

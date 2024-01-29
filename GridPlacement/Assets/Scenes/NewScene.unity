@@ -123,6 +123,70 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &261890457
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 261890458}
+  - component: {fileID: 261890460}
+  - component: {fileID: 261890459}
+  m_Layer: 0
+  m_Name: States
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &261890458
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 261890457}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 547621675}
+  m_RootOrder: -1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &261890459
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 261890457}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f039dbd3a6b7f604197a8d6348ab69b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  builder: {fileID: 547621676}
+  previewMat: {fileID: 2100000, guid: e5b4d3068c846534c97c9074f65c31b8, type: 2}
+  offsetY: 0.6
+  cursor: {fileID: 1059902196}
+  opBuildState: {fileID: 261890460}
+--- !u!114 &261890460
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 261890457}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a547609789fd9c4cbf8d9d549fe45a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  builder: {fileID: 547621676}
+  opPreviewState: {fileID: 261890459}
 --- !u!1 &390256636
 GameObject:
   m_ObjectHideFlags: 0
@@ -256,7 +320,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 547621676}
         m_TargetAssemblyTypeName: Builder, Assembly-CSharp
-        m_MethodName: StartPlacing
+        m_MethodName: StartPreview
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -494,6 +558,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1599552855}
+  - {fileID: 261890458}
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -511,6 +576,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   GetMousePos: {fileID: 547621674}
   tiles: {fileID: 11400000, guid: bb8666031da32a84a917e3b6e42cae4f, type: 2}
+  selectedIndex: 0
+  currOpState: {fileID: 0}
+  previewOpState: {fileID: 261890459}
   canPlace: 0
   gridPlane: {fileID: 1030224553}
   preview: {fileID: 390256637}
