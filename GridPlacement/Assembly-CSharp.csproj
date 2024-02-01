@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\Object\ObjectDestroyer.cs" />
     <Compile Include="Assets\Scripts\TileSO.cs" />
+    <Compile Include="Assets\Scripts\PathFinder.cs" />
     <Compile Include="Assets\Scripts\Builder.cs" />
     <Compile Include="Assets\Scripts\Preview.cs" />
     <Compile Include="Assets\Scripts\OpStateDelete.cs" />

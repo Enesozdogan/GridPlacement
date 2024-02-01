@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 261890458}
   - component: {fileID: 261890460}
   - component: {fileID: 261890459}
+  - component: {fileID: 261890461}
   m_Layer: 0
   m_Name: States
   m_TagString: Untagged
@@ -187,6 +188,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   builder: {fileID: 547621676}
   opPreviewState: {fileID: 261890459}
+--- !u!114 &261890461
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 261890457}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b98d43547bf1ece4ab9b8799ae4ff7d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  builder: {fileID: 547621676}
 --- !u!1 &390256636
 GameObject:
   m_ObjectHideFlags: 0
@@ -579,6 +593,7 @@ MonoBehaviour:
   selectedIndex: 0
   currOpState: {fileID: 0}
   previewOpState: {fileID: 261890459}
+  deleteOpState: {fileID: 261890461}
   canPlace: 0
   gridPlane: {fileID: 1030224553}
   preview: {fileID: 390256637}
@@ -1684,6 +1699,57 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!1 &1309590029
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1309590031}
+  - component: {fileID: 1309590030}
+  m_Layer: 0
+  m_Name: AStar
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1309590030
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1309590029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8bd3ae799fe81f040ae507c13c3d8254, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  builder: {fileID: 547621676}
+  startP: {x: 1, y: 1}
+  goalP: {x: 3, y: 1}
+  sizeX: 4
+  sizeY: 4
+  isFound: 0
+  hasActiveNode: 0
+--- !u!4 &1309590031
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1309590029}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.7, y: 0.33133334, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 12
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1330883373
 GameObject:
   m_ObjectHideFlags: 0
@@ -1770,7 +1836,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 547621676}
         m_TargetAssemblyTypeName: Builder, Assembly-CSharp
-        m_MethodName: StartPlacing
+        m_MethodName: StartPreview
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
