@@ -46,7 +46,7 @@ public class GetMousePos : MonoBehaviour
         {
             if (isDeleting)
             {
-                targetObject = GetRaycastedObject();
+                //targetObject = GetRaycastedObject();
             }
             GetMousePositionWorld();
             cursor.transform.position = grid.WorldToCell(mousePos);

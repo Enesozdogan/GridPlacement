@@ -67,6 +67,7 @@
     <Compile Include="Assets\Scripts\GetMousePos.cs" />
     <Compile Include="Assets\Scripts\OpStateBase.cs" />
     <Compile Include="Assets\Scripts\OpStatePreview.cs" />
+    <Compile Include="Assets\Scripts\SoldierMove.cs" />
     <Compile Include="Assets\Scripts\OpStateBuild.cs" />
   </ItemGroup>
   <ItemGroup>

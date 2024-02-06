@@ -17,8 +17,8 @@ public class PathFinder : MonoBehaviour
     private int sizeX, sizeY;
 
     public bool isFound = false;
-    public bool hasActiveNode = false;
-    public bool isGeneratingPath = false;
+  
+    public bool isPathGenerated = false;
     public List<Node> nodes = new List<Node>();
     public List<Node> openNodes = new List<Node>();
     public List<Node> closedNodes = new List<Node>();
@@ -36,25 +36,72 @@ public class PathFinder : MonoBehaviour
                 nodes.Add(node);
             }
         }
+       
+
+    }
+    public void AstarUI()
+    {
+        int randStartx = UnityEngine.Random.Range(0, 5);
+        int randStarty = UnityEngine.Random.Range(0, 5);
+        int randGoalx = UnityEngine.Random.Range(0, 5);
+        int randGoaly = UnityEngine.Random.Range(0, 5);
+       
+        Vector2 startTmp = new Vector2(randStartx, randStarty);
+        Vector2 goalTmp = new Vector2(randGoalx, randGoaly);
+        GeneratePath(startTmp ,goalTmp , pathNodes =>
+        {
+            if(pathNodes == null)
+            {
+                Debug.LogError("Path yok");
+            }
+            else
+            {
+                Debug.LogError("Path var");
+            }
+        });
+    }
+    public void AstarWithVectors()
+    {
+        pathNodes.Clear();
+        openNodes.Clear();
+        closedNodes.Clear();
+
         AddInitialNodeToOpen();
 
+        StartCoroutine(AStar3());
     }
-
-    private void Update()
+   public void GeneratePath(Vector2 startP,  Vector2 goalP, Action<List<Node>> pathCallback)
     {
-        if (!isFound && !hasActiveNode)
-            AStar();
-    }
+        pathNodes.Clear();
+        openNodes.Clear();
+        closedNodes.Clear();
 
+        this.startP = startP;
+        this.goalP = goalP;
+
+
+        AddInitialNodeToOpen();
+
+        StartCoroutine(AStar2(pathCallback));
+
+        //if (isPathGenerated)
+        //    return pathNodes;
+        //else
+        //    return null;
+
+    }
 
 
     private void AddInitialNodeToOpen()
     {
+
         Node node = nodes.Find(x => x.nodePos.x == startP.x && x.nodePos.y == startP.y);
         node.parentNode = null;
         openNodes.Add(node);
         
     }
+
+    
 
     /// <summary>
     /// Ilk once baslangic elemanini al
@@ -63,50 +110,109 @@ public class PathFinder : MonoBehaviour
     /// Closed list e at 
     /// open list'te en kucuk f e sahip olandan devam et 
     /// </summary>
-    private void AStar()
+    public IEnumerator AStar2(Action<List<Node>> pathCallback)
     {
-        Node currNode = openNodes.OrderBy(x => x.fVal).FirstOrDefault();
-        
-        //Debug.LogError("Current Node: " + currNode.nodePos);
-        hasActiveNode = true;
-        if (currNode.nodePos == goalP)
+        isFound = false;
+
+        while (!isFound)
         {
-            isFound = true;
-            closedNodes.Add(currNode);
-            
-            
-            StartCoroutine(PrintPath(pathNodes));
-            
-            //StartCoroutine(GeneratePath(pathNodes));
-          //  PrintPath(closedNodes);
-        }
-
-        List<Node> neighbours =FindNeighbour(currNode.nodeIndex);
-
-        foreach(Node node in neighbours)
-        {
-            int foundIndex = openNodes.FindIndex(x => x.nodeIndex == node.nodeIndex);
-            int foundClosed = closedNodes.FindIndex(x=> x.nodeIndex == node.nodeIndex);
-
-            //If already in closed list skip this neighbour
-            if (foundClosed >= 0)
+            Node currNode = openNodes.OrderBy(x => x.fVal).FirstOrDefault();
+            if (currNode.nodePos == goalP)
+            {
+                isFound = true;
+                closedNodes.Add(currNode);
                 continue;
-            //If not check if its in open list if found compare f value
-            if (foundIndex >= 0)
-            {
-                if (openNodes[foundIndex].fVal > node.fVal)
-                    openNodes[foundIndex] = node;
             }
-            else
+
+            List<Node> neighbours = FindNeighbour(currNode.nodeIndex);
+
+            foreach (Node node in neighbours)
             {
-                openNodes.Add(node);
+                int foundIndex = openNodes.FindIndex(x => x.nodeIndex == node.nodeIndex);
+                int foundClosed = closedNodes.FindIndex(x => x.nodeIndex == node.nodeIndex);
+
+                //If already in closed list skip this neighbour
+                if (foundClosed >= 0)
+                    continue;
+                //If not check if its in open list if found compare f value
+                if (builder.collisionMat[(int)(node.nodePos.x + 4.5f), (int)(node.nodePos.y + 4.5f)] == -1)
+                {
+                    if (foundIndex >= 0)
+                    {
+                        if (openNodes[foundIndex].fVal > node.fVal)
+                            openNodes[foundIndex] = node;
+                    }
+                    else
+                    {
+                        openNodes.Add(node);
+                    }
+                }
+
             }
+            openNodes.Remove(currNode);
+            closedNodes.Add(currNode);
+            currNode.isOnClosed = true;
+
+            yield return null;
         }
-        openNodes.Remove(currNode);
-        closedNodes.Add(currNode);
-        currNode.isOnClosed = true;
-        hasActiveNode = false;
+        if (isFound)
+        {
+            StartCoroutine(PrintPath(pathNodes));
+            if(isPathGenerated)
+                pathCallback(pathNodes);
+        }
+        
     }
+
+    public IEnumerator AStar3()
+    {
+        isFound = false;
+        while (!isFound)
+        {
+            Node currNode = openNodes.OrderBy(x => x.fVal).FirstOrDefault();
+            if (currNode.nodePos == goalP)
+            {
+                isFound = true;
+                closedNodes.Add(currNode);
+                continue;
+            }
+
+            List<Node> neighbours = FindNeighbour(currNode.nodeIndex);
+
+            foreach (Node node in neighbours)
+            {
+                int foundIndex = openNodes.FindIndex(x => x.nodeIndex == node.nodeIndex);
+                int foundClosed = closedNodes.FindIndex(x => x.nodeIndex == node.nodeIndex);
+
+                //If already in closed list skip this neighbour
+                if (foundClosed >= 0)
+                    continue;
+                //If not check if its in open list if found compare f value
+                if (builder.collisionMat[(int)(node.nodePos.x + 4.5f), (int)(node.nodePos.y + 4.5f)] == -1)
+                {
+                    if (foundIndex >= 0)
+                    {
+                        if (openNodes[foundIndex].fVal > node.fVal)
+                            openNodes[foundIndex] = node;
+                    }
+                    else
+                    {
+                        openNodes.Add(node);
+                    }
+                }
+
+            }
+            openNodes.Remove(currNode);
+            closedNodes.Add(currNode);
+            currNode.isOnClosed = true;
+
+            yield return null;
+        }
+        if (isFound)
+            StartCoroutine(PrintPath(pathNodes));
+    }
+
+
 
     private List<Node> FindNeighbour(int currNodeIndex)
     {
@@ -171,29 +277,10 @@ public class PathFinder : MonoBehaviour
         return (int)Mathf.Abs(nodePos.x - goalP.x) + (int)Mathf.Abs(nodePos.y- goalP.y);
     }
 
- 
-    private void PrintPath2(List<Node> pathNodes)
-    {
-        Node currentNode = closedNodes.LastOrDefault();
-        for (int i = 0; i<closedNodes.Count; i++)
-        {
-            if (currentNode == null)
-                break;
-            pathNodes.Add(currentNode);
-            //Debug.LogError("Current: " + currentNode.nodePos + ", Parent: " + currentNode.parentNode.nodePos);
-            currentNode = currentNode.parentNode;
-        }
-        pathNodes.Reverse();
-        foreach (Node node in pathNodes)
-        {
-            Debug.LogError(node.nodePos);
-        }
-
-    }
-
 
     private IEnumerator PrintPath(List<Node> pathNodes)
     {
+        isPathGenerated = false;
         Node currentNode = closedNodes.LastOrDefault();
         while (currentNode != null)
         {
@@ -202,6 +289,9 @@ public class PathFinder : MonoBehaviour
             yield return null; // This will make Unity wait for the next frame before continuing the loop
         }
         pathNodes.Reverse();
+
+        isPathGenerated = true;
+
         foreach (Node node in pathNodes)
         {
             Debug.LogError(node.nodePos);
@@ -210,16 +300,16 @@ public class PathFinder : MonoBehaviour
     }
 }
 
-[System.Serializable]
-public class Node
-{
-    public Vector2 nodePos;
-    public Node parentNode;
-    public int nodeIndex;
-    public bool isOnClosed = false;
-    public int fVal;
-    public int gVal;
-    public int hVal;
+
+//public class Node
+//{
+//    public Vector2 nodePos;
+//    public Node parentNode;
+//    public int nodeIndex;
+//    public bool isOnClosed = false;
+//    public int fVal;
+//    public int gVal;
+//    public int hVal;
 
 
-}
+//}

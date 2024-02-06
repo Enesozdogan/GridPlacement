@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
-using static UnityEditor.ObjectChangeEventStream;
+
 
 public class Builder : MonoBehaviour
 {
@@ -22,131 +22,50 @@ public class Builder : MonoBehaviour
     public Preview preview;
 
     public int[,] collisionMat = new int[10, 10];
+
+    public List<Node> Nodes = new List<Node>();
+
+    public static Builder Instance { get; private set; }
+    private void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject);
+    }
     private void Start()
     {
-        //StopPlacing();
-
-        for(int i = 0; i < collisionMat.GetLength(0); i++)
+        int indexCounter = 0;
+        int yCounter = collisionMat.GetLength(1)-1;
+        for (int y = 0; y < collisionMat.GetLength(0); y++)
         {
-            for (int j = 0; j < collisionMat.GetLength(1); j++)
-                collisionMat[i, j] = -1;
+            for (int x = 0; x < collisionMat.GetLength(1); x++)
+            {
+                collisionMat[y, x] = -1;
+
+                Node node = new Node();
+                node.nodePos = new Vector2(x-4.5f, yCounter-4.5f);
+                node.nodeIndex = indexCounter++;
+                Nodes.Add(node);
+
+            }
+            yCounter--;
         }
+
+
     }
 
-    //public void StartDeleting()
-    //{
-    //    StopPlacing();
-    //    GetMousePos.isDeleting= true;
-    //    GetMousePos.isUsingGrid = true;
-
-    //    GetMousePos.Onclick += DeleteObject;
-    //    GetMousePos.OnCancel += StopDeleting;
-    //}
-
-    //private void StopDeleting()
-    //{
-    //    GetMousePos.isUsingGrid = false;
-    //    GetMousePos.isDeleting = false;
-
-    //    GetMousePos.targetObject = null; 
-
-    //    GetMousePos.Onclick -= DeleteObject;
-    //    GetMousePos.OnCancel -= StopDeleting;
-    //}
-
-    //private void DeleteObject()
-    //{
-    //    if (GetMousePos.IsOverUI())
-    //    {
-    //        return;
-    //    }
-    //    if (GetMousePos.targetObject == null)
-    //    {
-    //        Debug.LogError("No Target Object Detected");
-    //        return;
-    //    }
-
-    //    if(GetMousePos.targetObject.TryGetComponent(out ObjectDestroyer objectDestroyer))
-    //    {
-    //        Vector3 objPos = GetMousePos.targetObject.transform.position;
-    //        int i, j;
-        
-    //        GetObjDecimalCoordinateIndex(objPos, out i , out j);
-    //        Vector2 buildingSize = tiles.buildings[collisionMat[i, j]].Size;
-
-    //        MakeCellClear(i,j,buildingSize);
-    //        objectDestroyer.Destroy();
-    //    }
-    //    else
-    //    {
-    //        Debug.LogError("Can't Destroy Object");
-    //        return;
-    //    }
-            
-
-    //}
-
-    //public void StartPlacing(int id)
-    //{
-    //    StopDeleting();
-    //    GetMousePos.isUsingGrid = true;
-        
-    //    selectedIndex = tiles.buildings.FindIndex(building => building.Id == id);
-    //    if (selectedIndex == -1)
-    //    {
-    //        Debug.LogError("No Such Building");
-    //        return;
-    //    }
-    //    preview.StartPreview(tiles.buildings[selectedIndex].Prefab);
-
-    //    GetMousePos.Onclick += PlaceBuilding;
-    //    GetMousePos.OnCancel += StopPlacing;
-
-    //}
-
-    //public void StopPlacing()
-    //{
-    //    GetMousePos.isUsingGrid = false;
-    //    preview.ClosePreview();
-    //    selectedIndex = -1;
-    //    GetMousePos.Onclick -= PlaceBuilding;
-    //    GetMousePos.OnCancel -= StopPlacing;
-    //}
-
-    //private void PlaceBuilding()
-    //{
-    //    if (GetMousePos.IsOverUI())
-    //    {
-    //        return;
-    //    }
-
-    //    Vector3 placePos;
-    //    int i, j;
-    //    GetDecimalCoordinateIndex(out placePos, out i, out j);
-
-    //    if (!canPlace)
-    //    {
-    //        Debug.LogError("Cannot place on this cell");
-    //        return;
-    //    }
-
-
-    //    GameObject building = Instantiate(tiles.buildings[selectedIndex].Prefab);
-    //    building.transform.position = placePos;
-
-    //    MakeCellDirty(i, j, tiles.buildings[selectedIndex].Size, tiles.buildings[selectedIndex].Id);
-
-    //}
+    
 
     public void GetDecimalCoordinateIndex(out Vector3 placePos, out int i, out int j)
     {
         placePos = GetMousePos.cursor.transform.position;
-        i = (int)(placePos.z + 4.5f);
+        i = (int)(4.5f - placePos.z);
         j = (int)(placePos.x + 4.5f);
     }
     public void GetObjDecimalCoordinateIndex(Vector3 objPos, out int i, out int j)
     { 
-        i = (int)(objPos.z + 4.5f);
+        i = (int)( 4.5f - objPos.z);
         j = (int)(objPos.x + 4.5f);
     }
     public void MakeCellDirty(int indexI, int indexJ, Vector2 buildingSize, int buildingId)
@@ -176,7 +95,9 @@ public class Builder : MonoBehaviour
         {
             for(int j= indexJ; j< indexJ + buildingSize.x; j++)
             {
-                if (collisionMat[i, j] != -1)
+                if (i >= collisionMat.Length || j >= collisionMat.GetLength(0))
+                    return false;
+                if (collisionMat[i, j] != -1 )
                     return false;
             }
         }
@@ -185,31 +106,7 @@ public class Builder : MonoBehaviour
 
     private void Update()
     {
-        //    if (GetMousePos.isUsingGrid)
-        //    {
-        //        if (!gridPlane.activeSelf)
-        //        {
-        //            gridPlane.SetActive(true);
-        //            GetMousePos.cursor.SetActive(true);
-        //        }
-        //        if (!GetMousePos.isDeleting)
-        //        {
-        //            Vector3 placePos;
-        //            int i, j;
 
-        //            GetDecimalCoordinateIndex(out placePos, out i, out j);
-        //            canPlace = CheckCollision(i, j, tiles.buildings[selectedIndex].Size);
-        //            preview.UpdatePreview(canPlace);
-        //            Debug.LogWarning(canPlace);
-
-        //        }
-        //    }
-        //    else if(!GetMousePos.isUsingGrid && gridPlane.activeSelf)
-        //    {
-
-        //        gridPlane.SetActive(false);
-        //        GetMousePos.cursor.SetActive(false);
-        //    }
         if(currOpState != null) 
             currOpState.UpdateInState();
 
@@ -234,4 +131,17 @@ public class Builder : MonoBehaviour
     {
         ShiftToState(deleteOpState);
     }
+}
+[System.Serializable]
+public class Node
+{
+    public Vector2 nodePos;
+    public Node parentNode;
+    public int nodeIndex;
+    public bool isOnClosed = false;
+    public int fVal;
+    public int gVal;
+    public int hVal;
+
+
 }
