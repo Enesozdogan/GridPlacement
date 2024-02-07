@@ -1,3 +1,6 @@
+
+using Priority_Queue;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +11,7 @@ using static UnityEditor.PlayerSettings;
 
 public class SoldierMove : MonoBehaviour
 {
-  
+
 
     private float totalDist;
     public float speed;
@@ -35,10 +38,11 @@ public class SoldierMove : MonoBehaviour
     public List<Node> openNodes = new List<Node>();
     public List<Node> closedNodes = new List<Node>();
     public List<Node> pathNodes = new();
+    public FastPriorityQueue<Node> priorityqueue = new(100);
     
     private void Awake()
     {
-        
+       
     }
     void Start()
     {
@@ -55,7 +59,7 @@ public class SoldierMove : MonoBehaviour
         pathNodes.Clear();
         openNodes.Clear();
         closedNodes.Clear();
-
+        priorityqueue.Clear();
         foreach (Node node in Builder.Instance.Nodes)
         {
             node.isOnClosed = false;
@@ -66,6 +70,22 @@ public class SoldierMove : MonoBehaviour
 
         StartCoroutine(AStar3());
     }
+    public void AstarWithVectorsQueue()
+    {
+        pathNodes.Clear();
+        openNodes.Clear();
+        closedNodes.Clear();
+        priorityqueue.Clear();
+        foreach (Node node in Builder.Instance.Nodes)
+        {
+            node.isOnClosed = false;
+
+        }
+
+        AddInitialNodeToOpen();
+
+        StartCoroutine(AStar4());
+    }
     private void AddInitialNodeToOpen()
     {
 
@@ -73,46 +93,11 @@ public class SoldierMove : MonoBehaviour
         node.parentNode = null;
         openNodes.Add(node);
 
+        //Priority Queue denemesi
+        priorityqueue.Enqueue(node, node.fVal);
     }
 
-    private IEnumerator Move()
-    {
-        int i = 0;
-        anim.Play("sprint");
-        transform.rotation = Quaternion.identity;
-        float startTime = Time.time;
-        float interpolationRatio=0;
-        while (i< pathNodes.Count-1)
-        {
-            Vector3 currNodePos = new Vector3(pathNodes[i].nodePos.x, 0, pathNodes[i].nodePos.y);
-            Vector3 nextNodePos = new Vector3(pathNodes[i + 1].nodePos.x, 0, pathNodes[i + 1].nodePos.y);
 
-            startTime = Time.time; 
-            while(interpolationRatio < 1)
-            {
-                Vector3 targetDirection = nextNodePos - transform.position;
-                if (Vector3.Dot(transform.forward, targetDirection)!=1)
-                {
-                     // Get the direction to the target
-                    // Keep only the horizontal direction
-                    Quaternion rotation = Quaternion.LookRotation(targetDirection);
-                    transform.rotation = Quaternion.Lerp(transform.rotation, rotation, interpolationRatio);
-
-                }
-
-                interpolationRatio = (Time.time - startTime) * speed / totalDist;
-                transform.position = Vector3.Lerp(currNodePos, nextNodePos, interpolationRatio);
-
-                yield return null;
-
-            }
-            interpolationRatio = 0; 
-            i++;
-            isSprinting = interpolationRatio >= 1 ? false : true;
-            yield return null;
-        }
-        anim.Play("idle");
-    }
 
     public IEnumerator AStar3()
     {
@@ -120,6 +105,7 @@ public class SoldierMove : MonoBehaviour
         while (!isFound)
         {
             Node currNode = openNodes.OrderBy(x => x.fVal).FirstOrDefault();
+
             if (currNode.nodePos == goalP)
             {
                 isFound = true;
@@ -127,11 +113,13 @@ public class SoldierMove : MonoBehaviour
                 continue;
             }
 
-            List<Node> neighbours = FindNeighbour(currNode.nodeIndex);
+            List<Node> neighbours = FindNeighbours2(currNode.nodeIndex);
 
             foreach (Node node in neighbours)
             {
                 int foundIndex = openNodes.FindIndex(x => x.nodeIndex == node.nodeIndex);
+               
+                
                 //int foundClosed = closedNodes.FindIndex(x => x.nodeIndex == node.nodeIndex);
 
                 //If already in closed list skip this neighbour
@@ -144,6 +132,7 @@ public class SoldierMove : MonoBehaviour
                     {
                         if (openNodes[foundIndex].fVal > node.fVal)
                             openNodes[foundIndex] = node;
+
                     }
                     else
                     {
@@ -167,126 +156,150 @@ public class SoldierMove : MonoBehaviour
             PrintPath3(pathNodes);
         }
     }
+    public IEnumerator AStar4()
+    {
+        isFound = false;
+        while (!isFound)
+        {
+            Debug.LogWarning(priorityqueue.Count);
+            Node currNode = priorityqueue.Dequeue();
+            if (currNode.nodePos == goalP)
+            {
+                isFound = true;
+                closedNodes.Add(currNode);
+                continue;
+            }
 
+            List<Node> neighbours = FindNeighbours2(currNode.nodeIndex);
+
+            foreach (Node node in neighbours)
+            {
+                
+                Node foundNode = priorityqueue.Where(x => x.nodeIndex == node.nodeIndex).FirstOrDefault();
+
+                //int foundClosed = closedNodes.FindIndex(x => x.nodeIndex == node.nodeIndex);
+
+                //If already in closed list skip this neighbour
+                if (node.isOnClosed)
+                    continue;
+                //If not check if its in open list if found compare f value
+                if (Builder.Instance.collisionMat[(int)(4.5f - currNode.nodePos.y), (int)(currNode.nodePos.x + 4.5f)] == -1)
+                {
+                    if (foundNode != null)
+                    {
+                        if (foundNode.fVal > node.fVal)
+                            priorityqueue.UpdatePriority(foundNode, node.fVal);
+                    }
+                    else
+                    {
+                        priorityqueue.Enqueue(node, node.fVal);
+                    }
+                }
+                else
+                {
+                    Debug.Log(node);
+                }
+
+            }
+            closedNodes.Add(currNode);
+            currNode.isOnClosed = true;
+
+            yield return null;
+        }
+        if (isFound)
+        {
+            PrintPath3(pathNodes);
+        }
+    }
     private bool CheckCol(Vector2 pos)
     {
         return Builder.Instance.collisionMat[(int)( 4.5f - pos.y), (int)(pos.x + 4.5f)] == -1;
     }
-    private List<Node> FindNeighbour(int currNodeIndex)
+
+    private List<Node> FindNeighbours2(int currNodeIndex)
     {
-        int rightIndex = currNodeIndex + 1;
-        int leftIndex = currNodeIndex - 1;
-        int downIndex = currNodeIndex + sizeX;
-        int upIndex = currNodeIndex - sizeX;
-        List<Node> neighbourList = new();
+        int[] neighbourIndexes = new int[4];
+        List<Node> neighbour = new List<Node>();
 
-        if (rightIndex < Builder.Instance.Nodes.Count && CheckCol(Builder.Instance.Nodes[rightIndex].nodePos))
+        //Sag Kontrol satirin soluna gecmesin
+        if((currNodeIndex)%10 == 0)
+            neighbourIndexes[0] = -1;
+        else
+            neighbourIndexes[0] = currNodeIndex -1;
+
+        //Sol kontrol satirin obur tarafina gecmesin.
+        if((currNodeIndex + 1) % 10 == 0)
+            neighbourIndexes[1] = -1;
+        else
+            neighbourIndexes[1] = currNodeIndex + 1;
+
+        neighbourIndexes[2] = currNodeIndex +10; // asagi
+        neighbourIndexes[3] = currNodeIndex -10; //yukari
+
+        foreach (int i in neighbourIndexes)
         {
-            int gValTmp = Builder.Instance.Nodes[currNodeIndex].gVal + 1;
-            int hValTmp = ManhattanDistance(Builder.Instance.Nodes[rightIndex].nodePos);
-            int fValTmp = gValTmp + hValTmp;
+            if(i < Builder.Instance.Nodes.Count && i>= 0 && CheckCol(Builder.Instance.Nodes[i].nodePos))
+            {
+                int gValTmp = Builder.Instance.Nodes[currNodeIndex].gVal + 1;
+                int hValTmp = ManhattanDistance(Builder.Instance.Nodes[i].nodePos);
+                int fValTmp = gValTmp + hValTmp;
 
-            if (fValTmp < Builder.Instance.Nodes[rightIndex].fVal || Builder.Instance.Nodes[rightIndex].fVal == 0)
-                Builder.Instance.Nodes[rightIndex].fVal = fValTmp;
+                if (fValTmp < Builder.Instance.Nodes[i].fVal || Builder.Instance.Nodes[i].fVal == 0)
+                    Builder.Instance.Nodes[i].fVal = fValTmp;
 
-            if (!Builder.Instance.Nodes[rightIndex].isOnClosed)
-                Builder.Instance.Nodes[rightIndex].parentNode = Builder.Instance.Nodes[currNodeIndex];
+                if (!Builder.Instance.Nodes[i].isOnClosed)
+                    Builder.Instance.Nodes[i].parentNode = Builder.Instance.Nodes[currNodeIndex];
 
-            neighbourList.Add(Builder.Instance.Nodes[rightIndex]);
+                neighbour.Add(Builder.Instance.Nodes[i]);
+
+            }
         }
-        if (leftIndex >= 0 && CheckCol(Builder.Instance.Nodes[leftIndex].nodePos))
-        {
-            int gValTmp = Builder.Instance.Nodes[currNodeIndex].gVal + 1;
-            int hValTmp = ManhattanDistance(Builder.Instance.Nodes[leftIndex].nodePos);
-            int fValTmp = gValTmp + hValTmp;
-
-            if (fValTmp < Builder.Instance.Nodes[leftIndex].fVal || Builder.Instance.Nodes[leftIndex].fVal == 0)
-                Builder.Instance.Nodes[leftIndex].fVal = fValTmp;
-
-            if (!Builder.Instance.Nodes[leftIndex].isOnClosed)
-                Builder.Instance.Nodes[leftIndex].parentNode = Builder.Instance.Nodes[currNodeIndex];
-
-            neighbourList.Add(Builder.Instance.Nodes[leftIndex]);
-        }
-        if (downIndex < Builder.Instance.Nodes.Count && CheckCol(Builder.Instance.Nodes[downIndex].nodePos))
-        {
-            int gValTmp = Builder.Instance.Nodes[currNodeIndex].gVal + 1;
-            int hValTmp = ManhattanDistance(Builder.Instance.Nodes[downIndex].nodePos);
-            int fValTmp = gValTmp + hValTmp;
-
-            if (fValTmp < Builder.Instance.Nodes[downIndex].fVal || Builder.Instance.Nodes[downIndex].fVal == 0)
-                Builder.Instance.Nodes[downIndex].fVal = fValTmp;
-
-            if (!Builder.Instance.Nodes[downIndex].isOnClosed)
-                Builder.Instance.Nodes[downIndex].parentNode = Builder.Instance.Nodes[currNodeIndex];
-
-            neighbourList.Add(Builder.Instance.Nodes[downIndex]);
-        }
-        if (upIndex >= 0 && CheckCol(Builder.Instance.Nodes[upIndex].nodePos))
-        {
-            int gValTmp = Builder.Instance.Nodes[currNodeIndex].gVal + 1;
-            int hValTmp = ManhattanDistance(Builder.Instance.Nodes[upIndex].nodePos);
-            int fValTmp = gValTmp + hValTmp;
-
-            if (fValTmp < Builder.Instance.Nodes[upIndex].fVal || Builder.Instance.Nodes[upIndex].fVal == 0)
-                Builder.Instance.Nodes[upIndex].fVal = fValTmp;
-
-            if (!Builder.Instance.Nodes[upIndex].isOnClosed)
-                Builder.Instance.Nodes[upIndex].parentNode = Builder.Instance.Nodes[currNodeIndex];
-
-            neighbourList.Add(Builder.Instance.Nodes[upIndex]);
-        }
-     
-        return neighbourList;
-
+        return neighbour;
     }
-
     private int ManhattanDistance(Vector2 nodePos)
     {
         return (int)Mathf.Abs(nodePos.x - goalP.x) + (int)Mathf.Abs(nodePos.y - goalP.y);
     }
+    private IEnumerator Move()
+    {
+        int i = 0;
+        anim.Play("sprint");
+        transform.rotation = Quaternion.identity;
+        float startTime = Time.time;
+        float interpolationRatio = 0;
+        while (i < pathNodes.Count - 1)
+        {
+            Vector3 currNodePos = new Vector3(pathNodes[i].nodePos.x, 0, pathNodes[i].nodePos.y);
+            Vector3 nextNodePos = new Vector3(pathNodes[i + 1].nodePos.x, 0, pathNodes[i + 1].nodePos.y);
 
+            startTime = Time.time;
+            while (interpolationRatio < 1)
+            {
+                Vector3 targetDirection = nextNodePos - transform.position;
+                if (Vector3.Dot(transform.forward, targetDirection) != 1)
+                {
+                    // Get the direction to the target
+                    // Keep only the horizontal direction
+                    Quaternion rotation = Quaternion.LookRotation(targetDirection);
+                    transform.rotation = Quaternion.Lerp(transform.rotation, rotation, interpolationRatio);
 
-    //private IEnumerator PrintPath(List<Node> pathNodes)
-    //{
-    //    isPathGenerated = false;
-    //    Node currentNode = closedNodes.LastOrDefault();
-    //    while (currentNode != null)
-    //    {
-    //        pathNodes.Add(currentNode);
-    //        currentNode = currentNode.parentNode;
-    //        yield return null; // This will make Unity wait for the next frame before continuing the loop
-    //    }
-    //    pathNodes.Reverse();
+                }
 
-    //    isPathGenerated = true;
+                interpolationRatio = (Time.time - startTime) * speed / totalDist;
+                transform.position = Vector3.Lerp(currNodePos, nextNodePos, interpolationRatio);
 
-    //    StartCoroutine(Move());
-    //}
-    //private IEnumerator PrintPath2(List<Node> pathNodes)
-    //{
-    //    isPathGenerated = false;
-    //    Node currentNode = closedNodes.LastOrDefault();
-    //    int nodesPerFrame = 1; // Adjust this value to add more or fewer nodes per frame
+                yield return null;
 
-    //    Stack<Node> pathStack = new Stack<Node>();
+            }
+            interpolationRatio = 0;
+            i++;
+            isSprinting = interpolationRatio >= 1 ? false : true;
+            yield return null;
+        }
+        anim.Play("idle");
+    }
 
-    //    while (currentNode != null)
-    //    {
-    //        for (; currentNode != null;)
-    //        {
-    //            pathStack.Push(currentNode);
-    //            currentNode = currentNode.parentNode;
-    //        }
-
-    //        yield return null; // This will make Unity wait for the next frame before continuing the loop
-    //    }
-
-    //    pathNodes.AddRange(pathStack); // Add the elements from the stack to the list
-    //    isPathGenerated = true;
-    //    StartCoroutine(Move());
-    //}
-
+    
     private void PrintPath3(List<Node> pathNodes)
     {
         isPathGenerated = false;

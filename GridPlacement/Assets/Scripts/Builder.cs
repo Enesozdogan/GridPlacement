@@ -1,3 +1,5 @@
+
+using Priority_Queue;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -132,8 +134,9 @@ public class Builder : MonoBehaviour
         ShiftToState(deleteOpState);
     }
 }
+
 [System.Serializable]
-public class Node
+public class Node : FastPriorityQueueNode
 {
     public Vector2 nodePos;
     public Node parentNode;
