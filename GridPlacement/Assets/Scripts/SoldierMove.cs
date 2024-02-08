@@ -19,7 +19,7 @@ public class SoldierMove : MonoBehaviour
     public bool isSprinting=true;
     //public float interpolationRatio;
     public Animator anim;
-
+    private LineRenderer lineRenderer;
 
 
     [Header("PathFinding")]
@@ -38,11 +38,15 @@ public class SoldierMove : MonoBehaviour
     public List<Node> openNodes = new List<Node>();
     public List<Node> closedNodes = new List<Node>();
     public List<Node> pathNodes = new();
-    public FastPriorityQueue<Node> priorityqueue = new(100);
-    
+
+
+    public FastPriorityQueue<Node> priorityqueue;
+    public Dictionary<int, Node> nodeIndToNode = new();
     private void Awake()
     {
-       
+       lineRenderer = GetComponentInChildren<LineRenderer>();
+        priorityqueue = new(sizeX * sizeY);
+
     }
     void Start()
     {
@@ -73,9 +77,9 @@ public class SoldierMove : MonoBehaviour
     public void AstarWithVectorsQueue()
     {
         pathNodes.Clear();
-        openNodes.Clear();
         closedNodes.Clear();
         priorityqueue.Clear();
+        nodeIndToNode.Clear();
         foreach (Node node in Builder.Instance.Nodes)
         {
             node.isOnClosed = false;
@@ -84,7 +88,7 @@ public class SoldierMove : MonoBehaviour
 
         AddInitialNodeToOpen();
 
-        StartCoroutine(AStar4());
+        StartCoroutine(AStar5());
     }
     private void AddInitialNodeToOpen()
     {
@@ -95,6 +99,8 @@ public class SoldierMove : MonoBehaviour
 
         //Priority Queue denemesi
         priorityqueue.Enqueue(node, node.fVal);
+        nodeIndToNode.Add(node.nodeIndex, node);
+
     }
 
 
@@ -161,7 +167,7 @@ public class SoldierMove : MonoBehaviour
         isFound = false;
         while (!isFound)
         {
-            Debug.LogWarning(priorityqueue.Count);
+            
             Node currNode = priorityqueue.Dequeue();
             if (currNode.nodePos == goalP)
             {
@@ -176,7 +182,7 @@ public class SoldierMove : MonoBehaviour
             {
                 
                 Node foundNode = priorityqueue.Where(x => x.nodeIndex == node.nodeIndex).FirstOrDefault();
-
+                
                 //int foundClosed = closedNodes.FindIndex(x => x.nodeIndex == node.nodeIndex);
 
                 //If already in closed list skip this neighbour
@@ -188,7 +194,10 @@ public class SoldierMove : MonoBehaviour
                     if (foundNode != null)
                     {
                         if (foundNode.fVal > node.fVal)
+                        {
                             priorityqueue.UpdatePriority(foundNode, node.fVal);
+                            Debug.LogWarning("F degisti");
+                        }
                     }
                     else
                     {
@@ -199,6 +208,48 @@ public class SoldierMove : MonoBehaviour
                 {
                     Debug.Log(node);
                 }
+
+            }
+            closedNodes.Add(currNode);
+            currNode.isOnClosed = true;
+
+            yield return null;
+        }
+        if (isFound)
+        {
+            PrintPath3(pathNodes);
+        }
+    }
+    public IEnumerator AStar5()
+    {
+        isFound = false;
+        while (!isFound)
+        {
+
+            Node currNode = priorityqueue.Dequeue();
+            if (currNode.nodePos == goalP)
+            {
+                isFound = true;
+                closedNodes.Add(currNode);
+                continue;
+            }
+
+            List<Node> neighbours = FindNeighbours2(currNode.nodeIndex);
+
+            foreach (Node node in neighbours)
+            {
+
+                if(nodeIndToNode.ContainsKey(node.nodeIndex))
+                {
+                    if (node.isOnClosed)
+                        continue;
+                }
+                else
+                {
+                    nodeIndToNode.Add(node.nodeIndex, node);
+                    priorityqueue.Enqueue(node, node.fVal);
+                }
+
 
             }
             closedNodes.Add(currNode);
@@ -222,19 +273,19 @@ public class SoldierMove : MonoBehaviour
         List<Node> neighbour = new List<Node>();
 
         //Sag Kontrol satirin soluna gecmesin
-        if((currNodeIndex)%10 == 0)
+        if((currNodeIndex)%sizeX == 0)
             neighbourIndexes[0] = -1;
         else
             neighbourIndexes[0] = currNodeIndex -1;
 
         //Sol kontrol satirin obur tarafina gecmesin.
-        if((currNodeIndex + 1) % 10 == 0)
+        if((currNodeIndex + 1) % sizeX == 0)
             neighbourIndexes[1] = -1;
         else
             neighbourIndexes[1] = currNodeIndex + 1;
 
-        neighbourIndexes[2] = currNodeIndex +10; // asagi
-        neighbourIndexes[3] = currNodeIndex -10; //yukari
+        neighbourIndexes[2] = currNodeIndex +sizeX; // asagi
+        neighbourIndexes[3] = currNodeIndex -sizeX; //yukari
 
         foreach (int i in neighbourIndexes)
         {
@@ -245,7 +296,13 @@ public class SoldierMove : MonoBehaviour
                 int fValTmp = gValTmp + hValTmp;
 
                 if (fValTmp < Builder.Instance.Nodes[i].fVal || Builder.Instance.Nodes[i].fVal == 0)
+                {
                     Builder.Instance.Nodes[i].fVal = fValTmp;
+                    if(nodeIndToNode.TryGetValue(i,out Node node))
+                    {
+                        priorityqueue.UpdatePriority(node, fValTmp);
+                    }
+                }
 
                 if (!Builder.Instance.Nodes[i].isOnClosed)
                     Builder.Instance.Nodes[i].parentNode = Builder.Instance.Nodes[currNodeIndex];
@@ -314,17 +371,18 @@ public class SoldierMove : MonoBehaviour
         }
         pathNodes.AddRange(pathStack); // Add the elements from the stack to the list
 
-        foreach (var node in pathNodes)
-        {
-            int i = (int)( 4.5f - node.nodePos.y);
-            int j = (int)(node.nodePos.x + 4.5f);
-            Debug.Log("i: " + i + " j: " + j);
-        }
         isPathGenerated = true;
+        RenderPath();
         StartCoroutine(Move());
 
     }
 
-
-
+    private void RenderPath()
+    {
+        lineRenderer.positionCount = pathNodes.Count;
+       for(int i =0;i < pathNodes.Count;i++)
+        {
+            lineRenderer.SetPosition(i, new Vector3(pathNodes[i].nodePos.x,0, pathNodes[i].nodePos.y));
+        }
+    }
 }
