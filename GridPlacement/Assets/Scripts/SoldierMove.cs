@@ -225,8 +225,10 @@ public class SoldierMove : MonoBehaviour
         isFound = false;
         while (!isFound)
         {
-
+        
+            
             Node currNode = priorityqueue.Dequeue();
+          
             if (currNode.nodePos == goalP)
             {
                 isFound = true;
@@ -297,6 +299,8 @@ public class SoldierMove : MonoBehaviour
 
                 if (fValTmp < Builder.Instance.Nodes[i].fVal || Builder.Instance.Nodes[i].fVal == 0)
                 {
+                    Builder.Instance.Nodes[i].hVal = hValTmp;
+                    Builder.Instance.Nodes[i].gVal = gValTmp;
                     Builder.Instance.Nodes[i].fVal = fValTmp;
                     if(nodeIndToNode.TryGetValue(i,out Node node))
                     {
