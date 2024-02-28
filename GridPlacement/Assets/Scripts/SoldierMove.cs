@@ -8,6 +8,7 @@ using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using static UnityEditor.ObjectChangeEventStream;
 using static UnityEditor.PlayerSettings;
+using static UnityEditor.Progress;
 
 public class SoldierMove : MonoBehaviour
 {
@@ -35,7 +36,7 @@ public class SoldierMove : MonoBehaviour
     public bool isPathGenerated = false;
 
 
-    public List<Node> openNodes = new List<Node>();
+
     public List<Node> closedNodes = new List<Node>();
     public List<Node> pathNodes = new();
 
@@ -58,22 +59,7 @@ public class SoldierMove : MonoBehaviour
 
 
     }
-    public void AstarWithVectors()
-    {
-        pathNodes.Clear();
-        openNodes.Clear();
-        closedNodes.Clear();
-        priorityqueue.Clear();
-        foreach (Node node in Builder.Instance.Nodes)
-        {
-            node.isOnClosed = false;
-        
-        }
 
-        AddInitialNodeToOpen();
-
-        StartCoroutine(AStar3());
-    }
     public void AstarWithVectorsQueue()
     {
         pathNodes.Clear();
@@ -83,6 +69,10 @@ public class SoldierMove : MonoBehaviour
         foreach (Node node in Builder.Instance.Nodes)
         {
             node.isOnClosed = false;
+            node.parentNode = null;
+            node.hVal = 0;
+            node.gVal = 0;
+            node.fVal = 0;
 
         }
 
@@ -95,140 +85,28 @@ public class SoldierMove : MonoBehaviour
 
         Node node = Builder.Instance.Nodes.Find(x => x.nodePos.x == startP.x && x.nodePos.y == startP.y);
         node.parentNode = null;
-        openNodes.Add(node);
+  
 
-        //Priority Queue denemesi
+
         priorityqueue.Enqueue(node, node.fVal);
         nodeIndToNode.Add(node.nodeIndex, node);
 
     }
 
 
-
-    public IEnumerator AStar3()
-    {
-        isFound = false;
-        while (!isFound)
-        {
-            Node currNode = openNodes.OrderBy(x => x.fVal).FirstOrDefault();
-
-            if (currNode.nodePos == goalP)
-            {
-                isFound = true;
-                closedNodes.Add(currNode);
-                continue;
-            }
-
-            List<Node> neighbours = FindNeighbours2(currNode.nodeIndex);
-
-            foreach (Node node in neighbours)
-            {
-                int foundIndex = openNodes.FindIndex(x => x.nodeIndex == node.nodeIndex);
-               
-                
-                //int foundClosed = closedNodes.FindIndex(x => x.nodeIndex == node.nodeIndex);
-
-                //If already in closed list skip this neighbour
-                if (node.isOnClosed)
-                    continue;
-                //If not check if its in open list if found compare f value
-                if (Builder.Instance.collisionMat[(int)(4.5f - currNode.nodePos.y), (int)(currNode.nodePos.x + 4.5f)] == -1)
-                {
-                    if (foundIndex >= 0)
-                    {
-                        if (openNodes[foundIndex].fVal > node.fVal)
-                            openNodes[foundIndex] = node;
-
-                    }
-                    else
-                    {
-                        openNodes.Add(node);
-                    }
-                }
-                else
-                {
-                    Debug.Log(node);
-                }
-
-            }
-            openNodes.Remove(currNode);
-            closedNodes.Add(currNode);
-            currNode.isOnClosed = true;
-
-            yield return null;
-        }
-        if (isFound)
-        {
-            PrintPath3(pathNodes);
-        }
-    }
-    public IEnumerator AStar4()
-    {
-        isFound = false;
-        while (!isFound)
-        {
-            
-            Node currNode = priorityqueue.Dequeue();
-            if (currNode.nodePos == goalP)
-            {
-                isFound = true;
-                closedNodes.Add(currNode);
-                continue;
-            }
-
-            List<Node> neighbours = FindNeighbours2(currNode.nodeIndex);
-
-            foreach (Node node in neighbours)
-            {
-                
-                Node foundNode = priorityqueue.Where(x => x.nodeIndex == node.nodeIndex).FirstOrDefault();
-                
-                //int foundClosed = closedNodes.FindIndex(x => x.nodeIndex == node.nodeIndex);
-
-                //If already in closed list skip this neighbour
-                if (node.isOnClosed)
-                    continue;
-                //If not check if its in open list if found compare f value
-                if (Builder.Instance.collisionMat[(int)(4.5f - currNode.nodePos.y), (int)(currNode.nodePos.x + 4.5f)] == -1)
-                {
-                    if (foundNode != null)
-                    {
-                        if (foundNode.fVal > node.fVal)
-                        {
-                            priorityqueue.UpdatePriority(foundNode, node.fVal);
-                            Debug.LogWarning("F degisti");
-                        }
-                    }
-                    else
-                    {
-                        priorityqueue.Enqueue(node, node.fVal);
-                    }
-                }
-                else
-                {
-                    Debug.Log(node);
-                }
-
-            }
-            closedNodes.Add(currNode);
-            currNode.isOnClosed = true;
-
-            yield return null;
-        }
-        if (isFound)
-        {
-            PrintPath3(pathNodes);
-        }
-    }
     public IEnumerator AStar5()
     {
         isFound = false;
         while (!isFound)
         {
-        
+
+            foreach (var item in priorityqueue)
+            {
+                Debug.LogWarning(item.nodePos + "gval: " + item.gVal + "hval: " + item.hVal);
+            }
             
             Node currNode = priorityqueue.Dequeue();
-          
+            Debug.LogError(currNode.nodePos + "gval: " + currNode.gVal + "hval: " + currNode.hVal);
             if (currNode.nodePos == goalP)
             {
                 isFound = true;
@@ -300,16 +178,19 @@ public class SoldierMove : MonoBehaviour
                 if (fValTmp < Builder.Instance.Nodes[i].fVal || Builder.Instance.Nodes[i].fVal == 0)
                 {
                     Builder.Instance.Nodes[i].hVal = hValTmp;
-                    Builder.Instance.Nodes[i].gVal = gValTmp;
+                   
                     Builder.Instance.Nodes[i].fVal = fValTmp;
-                    if(nodeIndToNode.TryGetValue(i,out Node node))
+                    if (nodeIndToNode.TryGetValue(i,out Node node))
                     {
                         priorityqueue.UpdatePriority(node, fValTmp);
                     }
                 }
 
                 if (!Builder.Instance.Nodes[i].isOnClosed)
+                {
                     Builder.Instance.Nodes[i].parentNode = Builder.Instance.Nodes[currNodeIndex];
+                    Builder.Instance.Nodes[i].gVal = gValTmp;
+                }
 
                 neighbour.Add(Builder.Instance.Nodes[i]);
 
