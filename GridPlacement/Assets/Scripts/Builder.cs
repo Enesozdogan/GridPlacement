@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEditor.ObjectChangeEventStream;
 
 
 public class Builder : MonoBehaviour
@@ -14,14 +15,12 @@ public class Builder : MonoBehaviour
     public int selectedIndex;
 
     [SerializeField]
-    public OpStateBase currOpState, previewOpState,deleteOpState;
+    public OpStateBase currOpState, previewOpState,deleteOpState,moveOpState;
 
     public bool canPlace;
     [SerializeField]
     public GameObject gridPlane;
 
-    [SerializeField]
-    public Preview preview;
 
     public int[,] collisionMat = new int[10, 10];
 
@@ -61,7 +60,8 @@ public class Builder : MonoBehaviour
 
     public void GetDecimalCoordinateIndex(out Vector3 placePos, out int i, out int j)
     {
-        placePos = GetMousePos.cursor.transform.position;
+        placePos = GetMousePos.cursorObj.transform.position;
+        
         i = (int)(4.5f - placePos.z);
         j = (int)(placePos.x + 4.5f);
     }
@@ -132,6 +132,11 @@ public class Builder : MonoBehaviour
     public void StartDeleting()
     {
         ShiftToState(deleteOpState);
+    }
+    
+    public void StartMovingUnits()
+    {
+        ShiftToState(moveOpState);
     }
 }
 

@@ -23,11 +23,16 @@ public class OpStatePreview : OpStateBase
     private OpStateBase opBuildState;
     protected override void OnEnterState()
     {
+        builder.GetMousePos.cursorIndex = CursorIndex.flagC;
+        builder.GetMousePos.ChangeCursorObject(CursorIndex.sphereC);
         builder.GetMousePos.isUsingGrid = true;
        StartPreview(builder.tiles.buildings[builder.selectedIndex].Prefab);
     }
     protected override void OnExitState()
     {
+        builder.GetMousePos.ChangeCursorObject(CursorIndex.flagC);
+        builder.GetMousePos.OnCancel -= HandleOnCancel;
+        builder.GetMousePos.Onclick -= HandleOnClick;
         ClosePreview();
     }
     protected override void HandleOnClick()
@@ -64,7 +69,7 @@ public class OpStatePreview : OpStateBase
 
     public void UpdatePreview(bool canPlace)
     {
-        previewObj.transform.position = cursor.transform.position + new Vector3(0, offsetY, 0);
+        previewObj.transform.position = builder.GetMousePos.cursorObj.transform.position + new Vector3(0, offsetY, 0);
         ChangeMatColor(canPlace);
 
     }
@@ -102,6 +107,8 @@ public class OpStatePreview : OpStateBase
         Vector3 placePos;
         int i, j;
         builder.GetDecimalCoordinateIndex(out placePos, out i, out j);
+
+        
         builder.canPlace = builder.CheckCollision(i, j, builder.tiles.buildings[builder.selectedIndex].Size);
         UpdatePreview(builder.canPlace);
 

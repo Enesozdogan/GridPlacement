@@ -5,15 +5,25 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+
 public class GetMousePos : MonoBehaviour
 {
     public Vector3 mousePos;
     [SerializeField]
     private LayerMask planeLayer,objectLayer;
 
-    public GameObject cursor;
+
+    [Header("Cursor Settings")]
+    public Dictionary<CursorIndex, GameObject> cursorEnToInd = new Dictionary<CursorIndex, GameObject>();
+    [SerializeField]
+    private List<GameObject> cursorReferences;
+    [SerializeField]
+    private Transform cursorParent;
     [SerializeField]
     private float cursorOffsetY;
+    public GameObject cursorObj;
+    
+    
     private Grid grid;
 
     public bool isUsingGrid;
@@ -21,10 +31,22 @@ public class GetMousePos : MonoBehaviour
 
     public GameObject targetObject;
     public event Action Onclick, OnCancel;
+
+    public CursorIndex cursorIndex;
     private void Awake()
     {
         grid = GetComponentInChildren<Grid>();
-    
+        int i = 0;
+        foreach (var obj in cursorReferences)
+        {
+            GameObject go = Instantiate(obj, cursorParent);
+            go.SetActive(false);
+            cursorEnToInd.Add((CursorIndex)i, go);
+            i++;
+        }
+        cursorIndex = CursorIndex.sphereC;
+        cursorEnToInd[cursorIndex].SetActive(true);
+        cursorObj = cursorEnToInd[cursorIndex];
     }
     
     public bool IsOverUI()
@@ -44,13 +66,9 @@ public class GetMousePos : MonoBehaviour
 
         if (isUsingGrid)
         {
-            if (isDeleting)
-            {
-                //targetObject = GetRaycastedObject();
-            }
             GetMousePositionWorld();
-            cursor.transform.position = grid.WorldToCell(mousePos);
-            cursor.transform.position = grid.GetCellCenterWorld(Vector3Int.CeilToInt(grid.WorldToCell(mousePos))) - new Vector3(0, 0.5f, 0);
+            cursorObj.transform.position = grid.WorldToCell(mousePos);
+            cursorObj.transform.position = grid.GetCellCenterWorld(Vector3Int.CeilToInt(grid.WorldToCell(mousePos))) - new Vector3(0, 0.5f, 0);
         }
        
         
@@ -58,6 +76,14 @@ public class GetMousePos : MonoBehaviour
         
     }
 
+    public void ChangeCursorObject(CursorIndex toCursorIndex)
+    {
+        cursorEnToInd[toCursorIndex].SetActive(true);
+        cursorObj = cursorEnToInd[toCursorIndex];
+        cursorObj.transform.position = cursorEnToInd[cursorIndex].transform.position;
+        cursorEnToInd[cursorIndex].SetActive(false);
+        cursorIndex = toCursorIndex;
+    }
     private void GetMousePositionWorld()
     {
         //Iki raycasti tek kolda yaz ki hem mouse hareketi hem de obje tespiti yapilsin.
@@ -87,4 +113,12 @@ public class GetMousePos : MonoBehaviour
     {
         Debug.DrawRay(Camera.main.transform.position, (mousePos - Camera.main.transform.position), Color.red);
     }
+
+    
+}
+
+public enum CursorIndex
+{
+    sphereC,
+    flagC
 }

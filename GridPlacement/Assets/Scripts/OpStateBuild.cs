@@ -40,7 +40,7 @@ public class OpStateBuild : OpStateBase
         Vector3 placePos;
         int i, j;
         builder.GetDecimalCoordinateIndex(out placePos, out i, out j);
-
+   
         if (!builder.canPlace)
         {
             Debug.LogError("Cannot place on this cell");
