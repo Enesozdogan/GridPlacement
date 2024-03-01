@@ -19,7 +19,7 @@ public class OpStateMove : OpStateBase
 
     protected override void HandleOnCancel()
     {
-        Exit();
+        TerminateState();
     }
 
     protected override void HandleOnClick()
@@ -35,6 +35,12 @@ public class OpStateMove : OpStateBase
     {
         
     }
+    public override void TerminateState()
+    {
+        builder.GetMousePos.ChangeCursorObject(CursorIndex.sphereC);
+        builder.GetMousePos.isUsingGrid = false;
+        base.TerminateState();
 
+    }
 
 }

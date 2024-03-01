@@ -14,8 +14,15 @@ public class Builder : MonoBehaviour
     public TileSO tiles;
     public int selectedIndex;
 
+    [Header("State References")]
     [SerializeField]
-    public OpStateBase currOpState, previewOpState,deleteOpState,moveOpState;
+    public OpStateBase currOpState;
+    [SerializeField]
+    public OpStateBase previewOpState;
+    [SerializeField]
+    public OpStateBase deleteOpState;
+    [SerializeField]
+    public OpStateBase moveOpState;
 
     public bool canPlace;
     [SerializeField]

@@ -9,6 +9,8 @@ using UnityEngine.EventSystems;
 public class GetMousePos : MonoBehaviour
 {
     public Vector3 mousePos;
+
+    private Vector3 prevMouseInputPos;
     [SerializeField]
     private LayerMask planeLayer,objectLayer;
 
@@ -22,7 +24,7 @@ public class GetMousePos : MonoBehaviour
     [SerializeField]
     private float cursorOffsetY;
     public GameObject cursorObj;
-    
+    public bool isUpdatingCursor;
     
     private Grid grid;
 
@@ -61,19 +63,26 @@ public class GetMousePos : MonoBehaviour
 
         if (Input.GetMouseButtonDown(0))
             Onclick?.Invoke();
-        if(Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown(1))
             OnCancel?.Invoke();
 
-        if (isUsingGrid)
+        MouseCoordinate();
+
+    }
+
+    private void MouseCoordinate()
+    {
+        if (isUsingGrid && Input.mousePosition != prevMouseInputPos)
         {
+            isUpdatingCursor = true;
             GetMousePositionWorld();
             cursorObj.transform.position = grid.WorldToCell(mousePos);
             cursorObj.transform.position = grid.GetCellCenterWorld(Vector3Int.CeilToInt(grid.WorldToCell(mousePos))) - new Vector3(0, 0.5f, 0);
         }
-       
-        
-
-        
+        else if (isUpdatingCursor && Input.mousePosition == prevMouseInputPos)
+        {
+            isUpdatingCursor = false;
+        }
     }
 
     public void ChangeCursorObject(CursorIndex toCursorIndex)
@@ -87,7 +96,8 @@ public class GetMousePos : MonoBehaviour
     private void GetMousePositionWorld()
     {
         //Iki raycasti tek kolda yaz ki hem mouse hareketi hem de obje tespiti yapilsin.
-        Ray cameraRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+        prevMouseInputPos = Input.mousePosition;
+        Ray cameraRay = Camera.main.ScreenPointToRay(prevMouseInputPos);
         RaycastHit hit;
      
         if (Physics.Raycast(cameraRay, out hit, 1000, planeLayer))

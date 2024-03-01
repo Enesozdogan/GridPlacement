@@ -54,4 +54,10 @@ public class OpStateBase : MonoBehaviour
         OnExitState();
         
     }
+    public virtual void TerminateState()
+    {
+        builder.GetMousePos.Onclick -= HandleOnClick;
+        builder.GetMousePos.OnCancel -= HandleOnCancel;
+        builder.currOpState = null;
+    }
 }

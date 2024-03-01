@@ -26,7 +26,9 @@ public class OpStatePreview : OpStateBase
         builder.GetMousePos.cursorIndex = CursorIndex.flagC;
         builder.GetMousePos.ChangeCursorObject(CursorIndex.sphereC);
         builder.GetMousePos.isUsingGrid = true;
-       StartPreview(builder.tiles.buildings[builder.selectedIndex].Prefab);
+        StartPreview(builder.tiles.buildings[builder.selectedIndex].Prefab);
+        TileCollisionCheck();
+        UpdatePreview(builder.canPlace);
     }
     protected override void OnExitState()
     {
@@ -43,9 +45,8 @@ public class OpStatePreview : OpStateBase
     protected override void HandleOnCancel()
     {
         ClosePreview();
-        builder.GetMousePos.OnCancel -= HandleOnCancel;
-        builder.GetMousePos.Onclick -= HandleOnClick;
-        builder.currOpState = null;
+        builder.GetMousePos.isUsingGrid = false;
+        TerminateState();
     }
     public void StartPreview(GameObject previewPrefab)
     {
@@ -104,15 +105,17 @@ public class OpStatePreview : OpStateBase
 
     public override void UpdateInState()
     {
-        Vector3 placePos;
-        int i, j;
-        builder.GetDecimalCoordinateIndex(out placePos, out i, out j);
-
-        
-        builder.canPlace = builder.CheckCollision(i, j, builder.tiles.buildings[builder.selectedIndex].Size);
+        if (!builder.GetMousePos.isUpdatingCursor) return;
+        TileCollisionCheck();
         UpdatePreview(builder.canPlace);
 
     }
 
-
+    private void TileCollisionCheck()
+    {
+        Vector3 placePos;
+        int i, j;
+        builder.GetDecimalCoordinateIndex(out placePos, out i, out j);
+        builder.canPlace = builder.CheckCollision(i, j, builder.tiles.buildings[builder.selectedIndex].Size);
+    }
 }
