@@ -32,7 +32,7 @@ public class GetMousePos : MonoBehaviour
     public bool isDeleting;
 
     public GameObject targetObject;
-    public event Action Onclick, OnCancel;
+    public event Action OnClick, OnCancel,OnLetGo;
 
     public CursorIndex cursorIndex;
     private void Awake()
@@ -60,11 +60,13 @@ public class GetMousePos : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        
         if (Input.GetMouseButtonDown(0))
-            Onclick?.Invoke();
+            OnClick?.Invoke();
         if (Input.GetMouseButtonDown(1))
             OnCancel?.Invoke();
+        if (Input.GetMouseButtonUp(0))
+            OnLetGo?.Invoke();
 
         MouseCoordinate();
 

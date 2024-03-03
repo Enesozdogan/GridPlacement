@@ -34,7 +34,7 @@ public class OpStatePreview : OpStateBase
     {
         builder.GetMousePos.ChangeCursorObject(CursorIndex.flagC);
         builder.GetMousePos.OnCancel -= HandleOnCancel;
-        builder.GetMousePos.Onclick -= HandleOnClick;
+        builder.GetMousePos.OnClick -= HandleOnClick;
         ClosePreview();
     }
     protected override void HandleOnClick()

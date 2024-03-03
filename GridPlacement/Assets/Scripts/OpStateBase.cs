@@ -39,7 +39,7 @@ public class OpStateBase : MonoBehaviour
     }
     public void Enter()
     {
-        builder.GetMousePos.Onclick += HandleOnClick;
+        builder.GetMousePos.OnClick += HandleOnClick;
         builder.GetMousePos.OnCancel += HandleOnCancel;
         OnEnterState();
     }
@@ -49,14 +49,14 @@ public class OpStateBase : MonoBehaviour
     public void Exit()
     {
        
-        builder.GetMousePos.Onclick -= HandleOnClick;
+        builder.GetMousePos.OnClick -= HandleOnClick;
         builder.GetMousePos.OnCancel -= HandleOnCancel;
         OnExitState();
         
     }
     public virtual void TerminateState()
     {
-        builder.GetMousePos.Onclick -= HandleOnClick;
+        builder.GetMousePos.OnClick -= HandleOnClick;
         builder.GetMousePos.OnCancel -= HandleOnCancel;
         builder.currOpState = null;
     }

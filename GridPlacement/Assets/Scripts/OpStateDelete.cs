@@ -11,7 +11,7 @@ public class OpStateDelete : OpStateBase
     {
         builder.GetMousePos.isDeleting = true;
         builder.GetMousePos.isUsingGrid = true;
-        builder.GetMousePos.Onclick += DeleteObject;
+        builder.GetMousePos.OnClick += DeleteObject;
         builder.GetMousePos.OnCancel += StopDeleting;
     }
     protected override void OnExitState()
@@ -21,7 +21,7 @@ public class OpStateDelete : OpStateBase
 
         builder.GetMousePos.targetObject = null;
 
-        builder.GetMousePos.Onclick -= DeleteObject;
+        builder.GetMousePos.OnClick -= DeleteObject;
         builder.GetMousePos.OnCancel -= StopDeleting;
     }
 
@@ -32,7 +32,7 @@ public class OpStateDelete : OpStateBase
 
         builder.GetMousePos.targetObject = null;
 
-        builder.GetMousePos.Onclick -= DeleteObject;
+        builder.GetMousePos.OnClick -= DeleteObject;
         builder.GetMousePos.OnCancel -= StopDeleting;
         builder.currOpState = null;
     }
