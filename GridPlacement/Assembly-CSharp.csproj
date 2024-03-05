@@ -69,6 +69,7 @@
     <Compile Include="Assets\Scripts\OpStateBase.cs" />
     <Compile Include="Assets\Scripts\Object\FlagAnimator.cs" />
     <Compile Include="Assets\Scripts\OpStatePreview.cs" />
+    <Compile Include="Assets\Scripts\OpStateMoveSingle.cs" />
     <Compile Include="Assets\Scripts\SoldierMove.cs" />
     <Compile Include="Assets\Scripts\Object\SelectionRect.cs" />
     <Compile Include="Assets\Scripts\OpStateBuild.cs" />

@@ -41,10 +41,18 @@ public class Builder : MonoBehaviour
         else
             Destroy(gameObject);
     }
+
+ 
     private void Start()
     {
         int indexCounter = 0;
-        int yCounter = collisionMat.GetLength(1)-1;
+        int yCounter = collisionMat.GetLength(1) - 1;
+        InitilaizeMatAndNode(ref indexCounter, ref yCounter);
+
+    }
+
+    private void InitilaizeMatAndNode(ref int indexCounter, ref int yCounter)
+    {
         for (int y = 0; y < collisionMat.GetLength(0); y++)
         {
             for (int x = 0; x < collisionMat.GetLength(1); x++)
@@ -52,18 +60,15 @@ public class Builder : MonoBehaviour
                 collisionMat[y, x] = -1;
 
                 Node node = new Node();
-                node.nodePos = new Vector2(x-4.5f, yCounter-4.5f);
+                node.nodePos = new Vector2(x - 4.5f, yCounter - 4.5f);
                 node.nodeIndex = indexCounter++;
                 Nodes.Add(node);
 
             }
             yCounter--;
         }
-
-
     }
 
-    
 
     public void GetDecimalCoordinateIndex(out Vector3 placePos, out int i, out int j)
     {

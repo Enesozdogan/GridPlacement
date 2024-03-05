@@ -12,7 +12,7 @@ public class GetMousePos : MonoBehaviour
 
     private Vector3 prevMouseInputPos;
     [SerializeField]
-    private LayerMask planeLayer,objectLayer;
+    private LayerMask planeLayer,obstacleLayer,objectLayer;
 
 
     [Header("Cursor Settings")]
@@ -112,6 +112,16 @@ public class GetMousePos : MonoBehaviour
 
     //Mouse pozisyonu raycast edilen objenin pozisyonuna getirilmeli ki matrix dogru coordinattan temizlensin.
     public GameObject GetRaycastedObject()
+    {
+        Ray cameraRay = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit2;
+        if (Physics.Raycast(cameraRay, out hit2, 1000, obstacleLayer))
+        {
+            return hit2.collider.gameObject;
+        }
+        return null;
+    }
+    public GameObject GetRaycastedSoldier()
     {
         Ray cameraRay = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit2;

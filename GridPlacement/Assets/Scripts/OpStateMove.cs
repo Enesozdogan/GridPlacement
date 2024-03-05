@@ -1,10 +1,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class OpStateMove : OpStateBase
 {
+    /// <summary>
+    /// To Activate this script Attach it to states objects under GridParent and fill the fields
+    /// </summary>
+
     [SerializeField]
     private RectTransform rectTransform;
 
@@ -13,13 +18,14 @@ public class OpStateMove : OpStateBase
     private Vector2 endPos;
     private Vector2 boxCenter;
 
-    private bool isSelecting = false;
+    public bool isSelecting = false;
     RectTransform parent;
  
     private HashSet<SoldierMove> soldiers = new();
 
     [SerializeField]
     private LayerMask objectMask;
+
 
     private void Awake()
     {
@@ -84,6 +90,7 @@ public class OpStateMove : OpStateBase
             {
                 if(collider.TryGetComponent(out SoldierMove soldier))
                 {
+                    Debug.LogError(soldier.name);
                     soldiers.Add(soldier);
                 }
             }
@@ -119,23 +126,55 @@ public class OpStateMove : OpStateBase
 
 
         builder.GetMousePos.OnClick -= StartSelectingUnit;
+        builder.GetMousePos.OnLetGo += StopSelectingUnit;
         builder.GetMousePos.OnClick += StartMovingUnit;
+
         soldiers.Clear();
-       
-        isSelecting = true;
+         isSelecting = true;
         RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, Input.mousePosition, null, out startPos);
     }
 
     private void StartMovingUnit()
     {
-        builder.GetMousePos.OnClick += StartSelectingUnit;
-        builder.GetMousePos.OnClick -= StartMovingUnit;
+        //  birim yoksa coroutine'i 
+        if (soldiers.Count == 0)
+        {
+            Debug.LogError("Secemedi");
+            isSelecting = true;
+            return;
 
+        }
+
+        builder.GetMousePos.OnClick += StartSelectingUnit;
+        builder.GetMousePos.OnLetGo -= StopSelectingUnit;
+        builder.GetMousePos.OnClick -= StartMovingUnit;
+        Vector2 goalP = new Vector2(builder.GetMousePos.cursorObj.transform.position.x, builder.GetMousePos.cursorObj.transform.position.z);
+        Debug.LogWarning(soldiers);
         foreach (var soldier in soldiers)
         {
-            soldier.AstarWithVectorsQueue();
+            Vector2 startP = new Vector2(soldier.transform.position.x, soldier.transform.position.z);
+            soldier.StopAllCoroutines();
+            soldier.AstarWithVectorsQueue(startP, goalP);
+
+           
+        }
+        //StartCoroutine(SequentialPathfinding(goalP));
+    }
+
+    IEnumerator SequentialPathfinding(Vector2 goalP)
+    {
+        foreach (var soldier in soldiers)
+        {
+            Vector2 startP = new Vector2(soldier.transform.position.x, soldier.transform.position.z);
+            soldier.StopAllCoroutines();
+            soldier.isPathGenerated = false;
+            soldier.isFound = false;
+            soldier.AstarWithVectorsQueue(startP, goalP);
+
+            yield return null;
         }
     }
+
 
     void UpdateSelectionBox()
     {

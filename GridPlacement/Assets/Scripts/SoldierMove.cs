@@ -17,7 +17,7 @@ public class SoldierMove : MonoBehaviour
     private float totalDist;
     public float speed;
     private float startTime;
-    public bool isSprinting=true;
+    public bool isSprinting=false;
     //public float interpolationRatio;
     public Animator anim;
     private LineRenderer lineRenderer;
@@ -39,7 +39,7 @@ public class SoldierMove : MonoBehaviour
 
     public List<Node> closedNodes = new List<Node>();
     public List<Node> pathNodes = new();
-
+   
 
     public FastPriorityQueue<Node> priorityqueue;
     public Dictionary<int, Node> nodeIndToNode = new();
@@ -60,12 +60,15 @@ public class SoldierMove : MonoBehaviour
 
     }
 
-    public void AstarWithVectorsQueue()
+
+
+    public void AstarWithVectorsQueue(Vector2 startPos, Vector2 endPos)
     {
         pathNodes.Clear();
         closedNodes.Clear();
         priorityqueue.Clear();
         nodeIndToNode.Clear();
+
         foreach (Node node in Builder.Instance.Nodes)
         {
             node.isOnClosed = false;
@@ -76,14 +79,14 @@ public class SoldierMove : MonoBehaviour
 
         }
 
-        AddInitialNodeToOpen();
+        AddInitialNodeToOpen(startPos);
 
-        StartCoroutine(AStar5());
+        StartCoroutine(AStar5(endPos));
     }
-    private void AddInitialNodeToOpen()
+    private void AddInitialNodeToOpen(Vector2 startPos)
     {
 
-        Node node = Builder.Instance.Nodes.Find(x => x.nodePos.x == startP.x && x.nodePos.y == startP.y);
+        Node node = Builder.Instance.Nodes.Find(x => x.nodePos.x == startPos.x && x.nodePos.y == startPos.y);
         node.parentNode = null;
   
 
@@ -94,20 +97,16 @@ public class SoldierMove : MonoBehaviour
     }
 
 
-    public IEnumerator AStar5()
+    public IEnumerator AStar5(Vector2 endPos)
     {
         isFound = false;
         while (!isFound)
         {
 
-            foreach (var item in priorityqueue)
-            {
-                Debug.LogWarning(item.nodePos + "gval: " + item.gVal + "hval: " + item.hVal);
-            }
-            
+
             Node currNode = priorityqueue.Dequeue();
-            Debug.LogError(currNode.nodePos + "gval: " + currNode.gVal + "hval: " + currNode.hVal);
-            if (currNode.nodePos == goalP)
+  
+            if (currNode.nodePos == endPos)
             {
                 isFound = true;
                 closedNodes.Add(currNode);
@@ -206,13 +205,14 @@ public class SoldierMove : MonoBehaviour
     {
         int i = 0;
         anim.Play("sprint");
+        isSprinting = true;
         transform.rotation = Quaternion.identity;
         float startTime = Time.time;
         float interpolationRatio = 0;
         while (i < pathNodes.Count - 1)
         {
-            Vector3 currNodePos = new Vector3(pathNodes[i].nodePos.x, 0, pathNodes[i].nodePos.y);
-            Vector3 nextNodePos = new Vector3(pathNodes[i + 1].nodePos.x, 0, pathNodes[i + 1].nodePos.y);
+            Vector3 currNodePos = new Vector3(pathNodes[i].nodePos.x, -1, pathNodes[i].nodePos.y);
+            Vector3 nextNodePos = new Vector3(pathNodes[i + 1].nodePos.x, -1, pathNodes[i + 1].nodePos.y);
 
             startTime = Time.time;
             while (interpolationRatio < 1)
@@ -235,10 +235,11 @@ public class SoldierMove : MonoBehaviour
             }
             interpolationRatio = 0;
             i++;
-            isSprinting = interpolationRatio >= 1 ? false : true;
+            
             yield return null;
         }
         anim.Play("idle");
+        isSprinting = false;
     }
 
     
@@ -256,7 +257,24 @@ public class SoldierMove : MonoBehaviour
         }
         pathNodes.AddRange(pathStack); // Add the elements from the stack to the list
 
+      
+        closedNodes.Clear();
+        priorityqueue.Clear();
+        nodeIndToNode.Clear();
+
+        foreach (Node node in Builder.Instance.Nodes)
+        {
+            node.isOnClosed = false;
+            node.parentNode = null;
+            node.hVal = 0;
+            node.gVal = 0;
+            node.fVal = 0;
+
+        }
+
         isPathGenerated = true;
+
+
         RenderPath();
         StartCoroutine(Move());
 
@@ -267,7 +285,7 @@ public class SoldierMove : MonoBehaviour
         lineRenderer.positionCount = pathNodes.Count;
        for(int i =0;i < pathNodes.Count;i++)
         {
-            lineRenderer.SetPosition(i, new Vector3(pathNodes[i].nodePos.x,0, pathNodes[i].nodePos.y));
+            lineRenderer.SetPosition(i, new Vector3(pathNodes[i].nodePos.x,-1, pathNodes[i].nodePos.y));
         }
     }
 }
