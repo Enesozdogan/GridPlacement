@@ -220,8 +220,7 @@ public class SoldierMove : MonoBehaviour
                 Vector3 targetDirection = nextNodePos - transform.position;
                 if (Vector3.Dot(transform.forward, targetDirection) != 1)
                 {
-                    // Get the direction to the target
-                    // Keep only the horizontal direction
+                  
                     Quaternion rotation = Quaternion.LookRotation(targetDirection);
                     transform.rotation = Quaternion.Lerp(transform.rotation, rotation, interpolationRatio);
 
@@ -255,7 +254,7 @@ public class SoldierMove : MonoBehaviour
             
             currentNode = currentNode.parentNode;
         }
-        pathNodes.AddRange(pathStack); // Add the elements from the stack to the list
+        pathNodes.AddRange(pathStack);
 
       
         closedNodes.Clear();
