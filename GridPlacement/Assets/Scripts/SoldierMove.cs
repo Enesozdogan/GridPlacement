@@ -81,23 +81,21 @@ public class SoldierMove : MonoBehaviour
 
         AddInitialNodeToOpen(startPos);
 
-        StartCoroutine(AStar5(endPos));
+        StartCoroutine(AStar6(endPos));
     }
     private void AddInitialNodeToOpen(Vector2 startPos)
     {
 
         Node node = Builder.Instance.Nodes.Find(x => x.nodePos.x == startPos.x && x.nodePos.y == startPos.y);
         node.parentNode = null;
-  
-
-
         priorityqueue.Enqueue(node, node.fVal);
         nodeIndToNode.Add(node.nodeIndex, node);
 
     }
 
 
-    public IEnumerator AStar5(Vector2 endPos)
+    
+    public IEnumerator AStar6(Vector2 endPos)
     {
         isFound = false;
         while (!isFound)
@@ -105,7 +103,7 @@ public class SoldierMove : MonoBehaviour
 
 
             Node currNode = priorityqueue.Dequeue();
-  
+
             if (currNode.nodePos == endPos)
             {
                 isFound = true;
@@ -113,24 +111,7 @@ public class SoldierMove : MonoBehaviour
                 continue;
             }
 
-            List<Node> neighbours = FindNeighbours2(currNode.nodeIndex);
-
-            foreach (Node node in neighbours)
-            {
-
-                if(nodeIndToNode.ContainsKey(node.nodeIndex))
-                {
-                    if (node.isOnClosed)
-                        continue;
-                }
-                else
-                {
-                    nodeIndToNode.Add(node.nodeIndex, node);
-                    priorityqueue.Enqueue(node, node.fVal);
-                }
-
-
-            }
+            FindNeighbours3(currNode.nodeIndex);
             closedNodes.Add(currNode);
             currNode.isOnClosed = true;
 
@@ -141,61 +122,73 @@ public class SoldierMove : MonoBehaviour
             PrintPath3(pathNodes);
         }
     }
-    private bool CheckCol(Vector2 pos)
-    {
-        return Builder.Instance.collisionMat[(int)( 4.5f - pos.y), (int)(pos.x + 4.5f)] == -1;
-    }
+   
 
-    private List<Node> FindNeighbours2(int currNodeIndex)
+    
+
+    private void FindNeighbours3(int currNodeIndex)
     {
         int[] neighbourIndexes = new int[4];
         List<Node> neighbour = new List<Node>();
 
         //Sag Kontrol satirin soluna gecmesin
-        if((currNodeIndex)%sizeX == 0)
+        if ((currNodeIndex) % sizeX == 0)
             neighbourIndexes[0] = -1;
         else
-            neighbourIndexes[0] = currNodeIndex -1;
+            neighbourIndexes[0] = currNodeIndex - 1;
 
         //Sol kontrol satirin obur tarafina gecmesin.
-        if((currNodeIndex + 1) % sizeX == 0)
+        if ((currNodeIndex + 1) % sizeX == 0)
             neighbourIndexes[1] = -1;
         else
             neighbourIndexes[1] = currNodeIndex + 1;
 
-        neighbourIndexes[2] = currNodeIndex +sizeX; // asagi
-        neighbourIndexes[3] = currNodeIndex -sizeX; //yukari
+        neighbourIndexes[2] = currNodeIndex + sizeX; // asagi
+        neighbourIndexes[3] = currNodeIndex - sizeX; //yukari
 
         foreach (int i in neighbourIndexes)
         {
-            if(i < Builder.Instance.Nodes.Count && i>= 0 && CheckCol(Builder.Instance.Nodes[i].nodePos))
+            if (i < Builder.Instance.Nodes.Count && i >= 0 && CheckCol(Builder.Instance.Nodes[i].nodePos) && !Builder.Instance.Nodes[i].isOnClosed)
             {
                 int gValTmp = Builder.Instance.Nodes[currNodeIndex].gVal + 1;
                 int hValTmp = ManhattanDistance(Builder.Instance.Nodes[i].nodePos);
                 int fValTmp = gValTmp + hValTmp;
 
-                if (fValTmp < Builder.Instance.Nodes[i].fVal || Builder.Instance.Nodes[i].fVal == 0)
+
+                if (nodeIndToNode.TryGetValue(i, out Node node))
                 {
-                    Builder.Instance.Nodes[i].hVal = hValTmp;
-                   
-                    Builder.Instance.Nodes[i].fVal = fValTmp;
-                    if (nodeIndToNode.TryGetValue(i,out Node node))
+                    if (Builder.Instance.Nodes[i].gVal > gValTmp)
                     {
+                        // If the new path to the node is shorter, update the node
+                        Builder.Instance.Nodes[i].hVal = hValTmp;
+                        Builder.Instance.Nodes[i].gVal = gValTmp;
+                        Builder.Instance.Nodes[i].fVal = fValTmp;
+                        Builder.Instance.Nodes[i].parentNode = Builder.Instance.Nodes[currNodeIndex];
+
                         priorityqueue.UpdatePriority(node, fValTmp);
                     }
                 }
-
-                if (!Builder.Instance.Nodes[i].isOnClosed)
+                else
                 {
-                    Builder.Instance.Nodes[i].parentNode = Builder.Instance.Nodes[currNodeIndex];
+                    // If the node is not in the open list, add it
+                    Builder.Instance.Nodes[i].hVal = hValTmp;
                     Builder.Instance.Nodes[i].gVal = gValTmp;
+                    Builder.Instance.Nodes[i].fVal = fValTmp;
+                    Builder.Instance.Nodes[i].parentNode = Builder.Instance.Nodes[currNodeIndex];
+
+                    nodeIndToNode.Add(Builder.Instance.Nodes[i].nodeIndex, Builder.Instance.Nodes[i]);
+                    priorityqueue.Enqueue(Builder.Instance.Nodes[i], Builder.Instance.Nodes[i].fVal);
                 }
 
-                neighbour.Add(Builder.Instance.Nodes[i]);
+
 
             }
         }
-        return neighbour;
+       
+    }
+    private bool CheckCol(Vector2 pos)
+    {
+        return Builder.Instance.collisionMat[(int)(4.5f - pos.y), (int)(pos.x + 4.5f)] == -1;
     }
     private int ManhattanDistance(Vector2 nodePos)
     {
